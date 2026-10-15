@@ -1,3 +1,10 @@
+> **Unofficial personal development archive.** This branch preserves version-specific
+> development code and is unmaintained as a distribution. It is not an endorsed
+> Mu2e tutorial or result and may have known limitations. The first-piece prior
+> correction is a draft pending native compilation and testing. See its
+> [implementation, regression test, and limitations](docs/first-piece-forward-prior/README.md).
+> The original upstream README and badges follow below.
+
 [![Build Status](https://github.com/KFTrack/KinKal/workflows/KinKal/badge.svg)](https://github.com/KFTrack/KinKal/actions)
 [![codecov](https://codecov.io/gh/KFTrack/KinKal/branch/main/graph/badge.svg)](https://codecov.io/gh/KFTrack/KinKal)
 
