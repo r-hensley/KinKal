@@ -2,8 +2,9 @@
 
 **Unofficial personal archive of version-specific development code.** This branch
 is unmaintained as a distribution, is not an endorsed Mu2e tutorial or result, and
-may have known limitations. This correction is a draft pending native compilation
-and testing against its current base.
+may have known limitations. The correction has compiled through current Offline
+consumers and remains a draft pending regression testing and reconstruction
+validation.
 
 The branch is based on KinKal `71cc7d928d27b04d3475ac47bea29709481f32f4`
 (`v3.8.0`). It contains a focused correction in `Track::iterate`, a deterministic
@@ -40,9 +41,17 @@ two unit-variance measurements at one imply a fitted mean of `0.8` and variance
 `0.4` at temperature zero. Omitting the forward prior gives `8/9` and `4/9` for
 the first piece. These are synthetic regression values, not detector results.
 
-Source review and whitespace checks are complete. Native compilation and test
-execution are pending; the preparation environment does not provide ROOT.
-In a configured KinKal build, run:
+Source review and whitespace checks are complete. KinKal libraries and all seven
+targets in the Offline `Mu2eKinKal` consumer package at commit
+`8fdf0eadfc1758810cacd7da6cdedc6895ac4862` compiled successfully against the patched
+KinKal `v3.8.0` base using the `p108` environment, ROOT 6.38.00, and GCC 13.3.0.
+The consumer compilation incorporates the modified `Track` template.
+
+The new `FirstPiecePrior` regression test has not been compiled or run. No
+reconstruction jobs or reconstruction validation have been performed for this
+current-main build. Successful compilation establishes source/build compatibility;
+runtime behavior remains unverified. To compile and run the regression
+later in a configured KinKal build:
 
 ```sh
 cmake --build <build-dir> --target Test_FirstPiecePrior

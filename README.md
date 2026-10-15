@@ -1,7 +1,8 @@
 > **Unofficial personal development archive.** This branch preserves version-specific
 > development code and is unmaintained as a distribution. It is not an endorsed
 > Mu2e tutorial or result and may have known limitations. The first-piece prior
-> correction is a draft pending native compilation and testing. See its
+> correction has compiled through current Offline consumers and remains a draft
+> pending regression testing and reconstruction validation. See its
 > [implementation, regression test, and limitations](docs/first-piece-forward-prior/README.md).
 > The original upstream README and badges follow below.
 
