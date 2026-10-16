@@ -620,7 +620,8 @@ namespace KinKal {
       updateDomains(*ptraj);
       // Distinguish an accepted posterior from other reference assignments.
       {
-        const AcceptedFitReference<KTRAJ> acceptedReference(*ptraj);
+        // Local information removal cannot transport weights across magnetic domains.
+        const AcceptedFitReference<KTRAJ> acceptedReference(*ptraj,config().bfcorr_ || !domains_.empty());
         for(auto& effptr : effects_) effptr->updateReference(*ptraj);
       }
       fittraj_.swap(ptraj);

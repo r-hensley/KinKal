@@ -4,7 +4,7 @@
 namespace KinKal {
   template<class KTRAJ> class ParticleTrajectory;
 
-  // Identifies only the accepted-posterior attachment in Track::iterate.
+  // Identifies accepted-posterior attachments without magnetic-domain transport.
   // Construction and domain replacement also call updateReference, but do not
   // signify that a new fit has assimilated the current measurement weights.
   // Nested scopes and exceptions restore the prior context; threads are independent.
@@ -12,8 +12,8 @@ namespace KinKal {
   template<class KTRAJ> class AcceptedFitReference {
     public:
       using PTRAJ = ParticleTrajectory<KTRAJ>;
-      explicit AcceptedFitReference(PTRAJ const& trajectory) noexcept : previous_(current_) {
-        current_ = &trajectory;
+      explicit AcceptedFitReference(PTRAJ const& trajectory, bool hasMagneticDomains) noexcept : previous_(current_) {
+        current_ = hasMagneticDomains ? nullptr : &trajectory;
       }
       ~AcceptedFitReference() { current_ = previous_; }
       AcceptedFitReference(AcceptedFitReference const&) = delete;
