@@ -37,6 +37,7 @@
 //
 #include "KinKal/Trajectory/ParticleTrajectory.hh"
 #include "KinKal/Fit/FitState.hh"
+#include "KinKal/Fit/AcceptedFitReference.hh"
 #include "KinKal/Fit/Effect.hh"
 #include "KinKal/Fit/Measurement.hh"
 #include "KinKal/Fit/Material.hh"
@@ -617,8 +618,12 @@ namespace KinKal {
     if(status().usable()){
       // prepare for the next iteration.  Update the domains
       updateDomains(*ptraj);
-      // update the effects to reference the new trajectory
-      for(auto& effptr : effects_) effptr->updateReference(*ptraj);
+      // Distinguish an accepted posterior from other reference assignments.
+      {
+        // Local information removal cannot transport weights across magnetic domains.
+        const AcceptedFitReference<KTRAJ> acceptedReference(*ptraj,config().bfcorr_ || !domains_.empty());
+        for(auto& effptr : effects_) effptr->updateReference(*ptraj);
+      }
       fittraj_.swap(ptraj);
       // now all effects reference the new traj: we can swap the fit to that.
       if(config().plevel_ >= Config::complete)fittraj_->print(std::cout,1);
