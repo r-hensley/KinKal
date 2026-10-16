@@ -1,7 +1,7 @@
 > **Unofficial personal development archive.** This branch preserves version-specific
 > development code and is unmaintained as a distribution. It is not an endorsed
 > Mu2e tutorial or result and may have known limitations. See the
-> [change description and validation limits](Fit/AcceptedFitReference.md).
+> [accepted-reference hook](Fit/AcceptedFitReference.hh).
 
 [![Build Status](https://github.com/KFTrack/KinKal/workflows/KinKal/badge.svg)](https://github.com/KFTrack/KinKal/actions)
 [![codecov](https://codecov.io/gh/KFTrack/KinKal/branch/main/graph/badge.svg)](https://codecov.io/gh/KFTrack/KinKal)

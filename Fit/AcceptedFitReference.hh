@@ -7,21 +7,22 @@ namespace KinKal {
   // Identifies only the accepted-posterior attachment in Track::iterate.
   // Construction and domain replacement also call updateReference, but do not
   // signify that a new fit has assimilated the current measurement weights.
-  // This context adds no data members or virtual functions to Hit or Effect.
+  // Nested scopes and exceptions restore the prior context; threads are independent.
+  // Consumers still need to match the active hit, cached weight and supported time.
   template<class KTRAJ> class AcceptedFitReference {
     public:
       using PTRAJ = ParticleTrajectory<KTRAJ>;
-      explicit AcceptedFitReference(PTRAJ const& trajectory) : previous_(current_) {
+      explicit AcceptedFitReference(PTRAJ const& trajectory) noexcept : previous_(current_) {
         current_ = &trajectory;
       }
       ~AcceptedFitReference() { current_ = previous_; }
       AcceptedFitReference(AcceptedFitReference const&) = delete;
       AcceptedFitReference& operator=(AcceptedFitReference const&) = delete;
 
-      static bool matches(PTRAJ const& trajectory) { return current_ == &trajectory; }
+      static bool matches(PTRAJ const& trajectory) noexcept { return current_ == &trajectory; }
     private:
       inline static thread_local PTRAJ const* current_ = nullptr;
-      PTRAJ const* previous_;
+      PTRAJ const* const previous_;
   };
 }
 #endif
