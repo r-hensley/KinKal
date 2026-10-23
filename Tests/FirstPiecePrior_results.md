@@ -31,37 +31,97 @@ Adding this report does not change the tested code or represent a new run.
 
 ## The calculation with a known answer
 
-The regression uses one iteration of `KinematicLine`, full-rank parameter
-measurements, zero magnetic field, and no field correction or end processing.
-Artificial piece boundaries add no parameter change or process noise. They
-therefore let us compare pieces that should describe the same fitted state.
+### What this test asks
 
-The 16 cases combine two covariance choices (diagonal or correlated), two
-temperatures (0 or 1), and four boundary choices (none, one active, two active,
-or one inactive). Together they produce 28 trajectory pieces per version.
-Every piece is checked against independently calculated Gaussian normal
-equations: all six parameters and all 36 covariance elements, with tolerance
+Does the first segment of the fitted track include the same information as
+the later segments? We check this using a simple fit with a known answer.
+
+A **piece** is one segment of the trajectory stored by the fitter. Each piece
+has six fitted parameter values and a **covariance matrix** describing their
+uncertainties. The six diagonal entries are variances (squared uncertainties);
+the other entries describe how errors in different parameters vary together.
+Here, **means** means the six fitted values, not an average over many tracks.
+
+The fitter starts its forward and backward passes with weak constraints around
+the starting track estimate: the **endpoint priors**, or regularizers. Its
+existing convention includes both in each final piece. Before the fix, the
+first piece includes only one; later pieces already include both. These priors
+are not two independent detector measurements.
+
+### A one-parameter example: adding weights, not variances
+
+In the simplest case (uncorrelated uncertainties, temperature 0), the parameter
+`d0` starts at 0. Two synthetic measurements each give 1 with variance 1. Each
+endpoint prior is centered at 0 with variance 4.
+
+For this Gaussian calculation, **weight = 1 / variance**. Each measurement gets
+weight 1; each prior gets only 1/4 because its uncertainty is larger. We add
+these weights, not the variances themselves.
+
+1. Add the weights: `1 + 1 + 0.25 + 0.25 = 2.5`.
+2. Multiply each value by its weight and add: `1*1 + 1*1 + 0*0.25 + 0*0.25 = 2`.
+3. Divide to get the fitted value: `2 / 2.5 = 0.8`.
+4. Invert the total weight to get the fitted variance: `1 / 2.5 = 0.4`.
+
+The measurements alone would give value 1 and variance 0.5. The weak priors
+pull the answer toward 0 and reduce its variance slightly. Omitting one prior
+leaves total weight 2.25, giving value `2 / 2.25 = 8/9` (about 0.889) and
+variance `1 / 2.25 = 4/9` (about 0.444). Those are the first-piece values
+observed before the fix; afterward they are 0.8 and 0.4 as expected.
+
+### Where the 16 cases and 28 pieces come from
+
+Each case is a constructed fit, not a detector event. We use one iteration of
+`KinematicLine`, zero magnetic field, and two measurements that directly
+constrain all six parameters. Field correction and end processing are disabled.
+
+We test every combination of:
+
+- **Two uncertainty choices:** diagonal covariance (uncorrelated errors) or
+  correlated covariance (errors in different parameters are coupled).
+- **Two temperatures, 0 and 1:** fitter settings that change the measurement
+  and prior weights, not physical temperatures.
+- **Four boundary choices:** none, one active, two active, or one inactive.
+  These produce 1, 2, 3 and 1 pieces, respectively. Active boundaries split
+  the track; an inactive one does not.
+
+That gives `2 * 2 * 4 = 16` fits, each with one first piece. The four boundary
+choices contribute `1 + 2 + 3 + 1 = 7` pieces for each uncertainty/temperature
+combination: `4 * 7 = 28` pieces total, comprising 16 first and 12 later pieces.
+
+The artificial boundaries cause no energy loss, scattering or parameter change.
+All pieces in a given fit should therefore have the same values and covariance.
+
+### How to read the results
+
+For each piece, the expected six parameter values and 36 covariance entries
+are calculated separately from the fitter using Gaussian weighted-fit
+equations. An entry passes if
 `abs(actual - expected) <= 1e-10 * (1 + abs(expected))`.
-
-For a simple example, two measurements of 1 each have unit variance, while two
-weak endpoint regularizers are centered at 0 with variance 4 each. Including
-both regularizers gives mean `2 / (1 + 1 + 0.25 + 0.25) = 0.8` and variance
-`1 / 2.5 = 0.4`. Omitting one gives `8/9` and `4/9`. The native fitter produces
-the latter values before the correction and the expected values afterward.
-These endpoint regularizers follow the fitter's existing convention; they are
-not two independent physical measurements.
 
 | Check | A: without fix | B: with fix |
 | --- | ---: | ---: |
-| First-piece means passing | 0/16 | 16/16 |
-| First-piece full covariances passing | 0/16 | 16/16 |
-| Later pieces passing | 12/12 | 12/12 |
-| Total pieces passing | 12/28 | 28/28 |
-| CTest exit status | 8: expected failure | 0: pass |
+| First piece: all six fitted values correct | 0/16 | 16/16 |
+| First piece: full covariance correct | 0/16 | 16/16 |
+| Later pieces: fitted values and covariance correct | 12/12 | 12/12 |
+| All pieces: fitted values and covariance correct | 12/28 | 28/28 |
+| Test runner (CTest) exit code | 8: fail | 0: pass |
 
-All 504 later-piece parameter/covariance values agree between A and B at the
-saved 17-digit precision. The largest normalized element error in B is
-`8.29e-15`, well below the test tolerance.
+- **First row:** count a fit only if all six values in its first piece match
+  the expected answer. Before the fix, none do; afterward, all 16 do.
+- **Second row:** check all 36 uncertainty/correlation entries for those same
+  16 first pieces. These are not 16 additional fits.
+- **Third row:** check both values and covariance for each of the 12 later
+  pieces. All pass before and after the fix.
+- **Fourth row:** count all 28 pieces, requiring both checks to pass. Before
+  the fix, only the 12 later pieces pass; afterward, all 28 pass.
+- **Last row:** CTest's overall result. Code 8 means a test failed, not eight
+  cases failed. Failure before the fix is expected: the test detects the bug.
+
+The later pieces also agree directly between A and B at the saved 17-digit
+precision: `12 pieces * (6 fitted values + 36 covariance entries) = 504`
+unchanged numbers. The largest normalized element error in B is `8.29e-15`,
+well below the `1e-10` tolerance.
 
 This establishes the missing-prior correction for the tested calculation.
 The artificial boundaries do not test real energy loss or scattering, and a
